@@ -60,6 +60,106 @@ function AccordionItem({
   );
 }
 
+// ─── Scroll Reveal ──────────────────────────────────────────────────────────
+
+function useReveal<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, visible] as const;
+}
+
+function Reveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const [ref, visible] = useReveal<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: visible ? `${delay}ms` : "0ms" }}
+      className={`transition-all duration-[800ms] ease-out will-change-transform ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ─── Parallax ───────────────────────────────────────────────────────────────
+
+function useParallax<T extends HTMLElement>(speed = 0.12) {
+  const ref = useRef<T | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    let frame = 0;
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (rect.bottom < -200 || rect.top > vh + 200) return;
+      const sectionMid = rect.top + rect.height / 2;
+      const offset = (sectionMid - vh / 2) * speed * -1;
+      el.style.transform = `translate3d(0, ${offset.toFixed(2)}px, 0)`;
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [speed]);
+
+  return ref;
+}
+
 // ─── Coach Video Player ──────────────────────────────────────────────────────
 
 function CoachVideoPlayer({ src, poster }: { src: string; poster: string }) {
@@ -127,6 +227,8 @@ export default function LandingPage() {
   const [showAllFaqs, setShowAllFaqs] = useState(false);
 
   const formRef = useRef<HTMLDivElement>(null);
+  const heroBgRef = useParallax<HTMLImageElement>(0.14);
+  const facilityBgRef = useParallax<HTMLImageElement>(0.08);
 
   const scrollToForm = () => {
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -325,11 +427,12 @@ export default function LandingPage() {
       {/* ── HERO ── */}
       <section className="relative pt-16 min-h-screen flex items-center overflow-hidden">
         {/* Background image with overlay */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 overflow-hidden">
           <img
+            ref={heroBgRef}
             src={heroImage}
             alt="Elite gym training"
-            className="w-full h-full object-cover opacity-20"
+            className="absolute inset-x-0 -top-[15%] w-full h-[130%] object-cover opacity-20 will-change-transform"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/80 to-[#09090b]/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent" />
@@ -451,7 +554,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left: Text */}
-            <div>
+            <Reveal>
               <div className="flex items-center gap-3 mb-5">
                 <div className="h-px w-8 bg-[#b5e22e]" />
                 <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
@@ -492,15 +595,16 @@ export default function LandingPage() {
                   Veterans Avenue, Daro, Dumaguete City, 6200 Negros Oriental, Philippines
                 </span>
               </div>
-            </div>
+            </Reveal>
 
             {/* Right: Facility Visual */}
-            <div className="relative">
-              <div className="relative rounded-sm overflow-hidden bg-zinc-900">
+            <Reveal delay={140} className="relative">
+              <div className="relative rounded-sm overflow-hidden bg-zinc-900 h-80 lg:h-96">
                 <img
+                  ref={facilityBgRef}
                   src={facilityImage}
                   alt="Multifit Gym training floor"
-                  className="w-full h-80 lg:h-96 object-cover opacity-80"
+                  className="absolute inset-x-0 -top-[10%] w-full h-[120%] object-cover opacity-80 will-change-transform"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
 
@@ -539,7 +643,7 @@ export default function LandingPage() {
                 <p className="text-2xl leading-none">6+</p>
                 <p className="text-xs font-bold uppercase tracking-wide">Yrs Experience</p>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -548,33 +652,36 @@ export default function LandingPage() {
       {galleryImages.length > 0 && (
         <section className="py-24 border-t border-zinc-800/60 bg-zinc-950">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
-              <div>
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="h-px w-8 bg-[#b5e22e]" />
-                  <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                    Inside Multifit
-                  </span>
+            <Reveal>
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+                <div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="h-px w-8 bg-[#b5e22e]" />
+                    <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                      Inside Multifit
+                    </span>
+                  </div>
+                  <h2
+                    className="text-4xl lg:text-5xl font-black uppercase leading-tight tracking-tight"
+                    style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                  >
+                    <span className="text-white">The Floor.</span>{" "}
+                    <span className="text-[#b5e22e]">The Iron.</span>{" "}
+                    <span className="text-white">The Standard.</span>
+                  </h2>
                 </div>
-                <h2
-                  className="text-4xl lg:text-5xl font-black uppercase leading-tight tracking-tight"
-                  style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-                >
-                  <span className="text-white">The Floor.</span>{" "}
-                  <span className="text-[#b5e22e]">The Iron.</span>{" "}
-                  <span className="text-white">The Standard.</span>
-                </h2>
+                <p className="text-zinc-400 text-sm max-w-md">
+                  A look inside the facility where every program is built, tested, and refined
+                  daily — Dumaguete City, Philippines.
+                </p>
               </div>
-              <p className="text-zinc-400 text-sm max-w-md">
-                A look inside the facility where every program is built, tested, and refined daily —
-                Dumaguete City, Philippines.
-              </p>
-            </div>
+            </Reveal>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {galleryImages.map((src, i) => (
-                <div
+                <Reveal
                   key={src}
+                  delay={Math.min(i * 60, 360)}
                   className={`group relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-900 ${
                     i % 5 === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"
                   }`}
@@ -591,7 +698,7 @@ export default function LandingPage() {
                       Multifit · Dumaguete
                     </span>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -601,25 +708,27 @@ export default function LandingPage() {
       {/* ── PROGRAMS ── */}
       <section id="programs" className="py-24 border-t border-zinc-800/60 bg-zinc-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="h-px w-8 bg-[#b5e22e]" />
-              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                The Blueprint
-              </span>
-              <div className="h-px w-8 bg-[#b5e22e]" />
+          <Reveal>
+            <div className="text-center mb-16">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div className="h-px w-8 bg-[#b5e22e]" />
+                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                  The Blueprint
+                </span>
+                <div className="h-px w-8 bg-[#b5e22e]" />
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white"
+                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+              >
+                When You Train <span className="text-[#b5e22e]">Under Jokko</span>
+              </h2>
+              <p className="text-zinc-400 mt-4 max-w-xl mx-auto leading-relaxed">
+                From the day you apply to the day you don&apos;t recognize the man (or woman) in
+                the mirror — this is the exact path Jokko walks every client down.
+              </p>
             </div>
-            <h2
-              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white"
-              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-            >
-              When You Train <span className="text-[#b5e22e]">Under Jokko</span>
-            </h2>
-            <p className="text-zinc-400 mt-4 max-w-xl mx-auto leading-relaxed">
-              From the day you apply to the day you don&apos;t recognize the man (or woman) in the
-              mirror — this is the exact path Jokko walks every client down.
-            </p>
-          </div>
+          </Reveal>
 
           <div className="max-w-4xl mx-auto">
             <div className="relative">
@@ -683,9 +792,10 @@ export default function LandingPage() {
                       "Methodology you've internalized — yours for life",
                     ],
                   },
-                ].map((step) => (
-                  <div
+                ].map((step, idx) => (
+                  <Reveal
                     key={step.num}
+                    delay={idx * 90}
                     className="relative grid grid-cols-[64px_1fr] md:grid-cols-[80px_1fr] gap-4 md:gap-6 items-start"
                   >
                     {/* Numbered marker */}
@@ -726,13 +836,13 @@ export default function LandingPage() {
                         ))}
                       </ul>
                     </div>
-                  </div>
+                  </Reveal>
                 ))}
               </div>
             </div>
 
             {/* Final CTA */}
-            <div className="text-center mt-14">
+            <Reveal className="text-center mt-14">
               <p className="text-zinc-400 text-sm mb-5 max-w-md mx-auto">
                 Every transformation Jokko has guided started exactly the same way — with Step 01.
               </p>
@@ -742,7 +852,7 @@ export default function LandingPage() {
               >
                 Start at Step 01 <ArrowRight size={16} />
               </button>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -750,25 +860,30 @@ export default function LandingPage() {
       {/* ── SOCIAL PROOF ── */}
       <section className="py-24 border-t border-zinc-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="h-px w-8 bg-[#b5e22e]" />
-              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                Client Results
-              </span>
-              <div className="h-px w-8 bg-[#b5e22e]" />
+          <Reveal>
+            <div className="text-center mb-16">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div className="h-px w-8 bg-[#b5e22e]" />
+                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                  Client Results
+                </span>
+                <div className="h-px w-8 bg-[#b5e22e]" />
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white"
+                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+              >
+                Transformations That Speak
+              </h2>
             </div>
-            <h2
-              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white"
-              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-            >
-              Transformations That Speak
-            </h2>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Testimonial 1 — Didn't know how to lift */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300">
+            <Reveal
+              delay={0}
+              className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300"
+            >
               <div className="mb-4">
                 <span
                   className="text-3xl font-black text-[#b5e22e] uppercase"
@@ -791,10 +906,13 @@ export default function LandingPage() {
                   🇵🇭 Cebu City, PH
                 </span>
               </div>
-            </div>
+            </Reveal>
 
             {/* Testimonial 2 — Accountability */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300">
+            <Reveal
+              delay={120}
+              className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300"
+            >
               <div className="mb-4">
                 <span
                   className="text-3xl font-black text-[#b5e22e] uppercase"
@@ -817,10 +935,13 @@ export default function LandingPage() {
                   🇵🇭 Dumaguete City, PH
                 </span>
               </div>
-            </div>
+            </Reveal>
 
             {/* Testimonial 3 — Didn't know what to eat */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300">
+            <Reveal
+              delay={240}
+              className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300"
+            >
               <div className="mb-4">
                 <span
                   className="text-3xl font-black text-[#b5e22e] uppercase"
@@ -842,7 +963,7 @@ export default function LandingPage() {
                   🇵🇭 Iloilo City, PH
                 </span>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -851,7 +972,7 @@ export default function LandingPage() {
       <section id="about" className="py-24 border-t border-zinc-800/60 bg-zinc-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="relative">
+            <Reveal className="relative">
               {coachIntroVideo ? (
                 <>
                   <CoachVideoPlayer src={coachIntroVideo} poster={coachImage} />
@@ -908,8 +1029,8 @@ export default function LandingPage() {
                   </div>
                 </>
               )}
-            </div>
-            <div>
+            </Reveal>
+            <Reveal delay={140}>
               <div className="flex items-center gap-3 mb-5">
                 <div className="h-px w-8 bg-[#b5e22e]" />
                 <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
@@ -950,7 +1071,7 @@ export default function LandingPage() {
                   <span className="text-zinc-300 text-sm font-medium">Dumaguete City, PH</span>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -958,7 +1079,7 @@ export default function LandingPage() {
       {/* ── SOCIAL — Verify the coach is real ── */}
       <section className="py-16 border-t border-zinc-800/60 bg-zinc-950">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-sm p-8 text-center">
+          <Reveal className="bg-zinc-900/60 border border-zinc-800 rounded-sm p-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="h-px w-8 bg-[#b5e22e]" />
               <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
@@ -1011,32 +1132,34 @@ export default function LandingPage() {
             <p className="text-zinc-600 text-xs mt-5">
               Opens in a new tab — your application stays right here.
             </p>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── FAQ ── */}
       <section className="py-24 border-t border-zinc-800/60">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="h-px w-8 bg-[#b5e22e]" />
-              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                FAQ
-              </span>
-              <div className="h-px w-8 bg-[#b5e22e]" />
+          <Reveal>
+            <div className="text-center mb-14">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div className="h-px w-8 bg-[#b5e22e]" />
+                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                  FAQ
+                </span>
+                <div className="h-px w-8 bg-[#b5e22e]" />
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
+                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+              >
+                Frequently Asked Questions
+              </h2>
+              <p className="text-zinc-400 text-sm">
+                Real questions from real lifters. Form, fat loss, muscle gain, plateaus, and the
+                stuff most people are afraid to ask.
+              </p>
             </div>
-            <h2
-              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
-              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-            >
-              Frequently Asked Questions
-            </h2>
-            <p className="text-zinc-400 text-sm">
-              Real questions from real lifters. Form, fat loss, muscle gain, plateaus, and the
-              stuff most people are afraid to ask.
-            </p>
-          </div>
+          </Reveal>
 
           <div className="space-y-3">
             {(showAllFaqs ? faqs : faqs.slice(0, 3)).map((faq, i) => (
@@ -1083,26 +1206,28 @@ export default function LandingPage() {
       {/* ── LEAD CAPTURE FORM ── */}
       <section ref={formRef} className="py-24 border-t border-zinc-800/60 bg-zinc-950">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="h-px w-8 bg-[#b5e22e]" />
-              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                Apply Now
-              </span>
-              <div className="h-px w-8 bg-[#b5e22e]" />
+          <Reveal>
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div className="h-px w-8 bg-[#b5e22e]" />
+                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                  Apply Now
+                </span>
+                <div className="h-px w-8 bg-[#b5e22e]" />
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
+                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+              >
+                Secure Your Slot
+              </h2>
+              <p className="text-zinc-400 text-sm">
+                Limited coaching slots available. Coach Jokko personally reviews every application.
+              </p>
             </div>
-            <h2
-              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
-              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-            >
-              Secure Your Slot
-            </h2>
-            <p className="text-zinc-400 text-sm">
-              Limited coaching slots available. Coach Jokko personally reviews every application.
-            </p>
-          </div>
+          </Reveal>
 
-          <div className="bg-zinc-900 border border-zinc-700 rounded-sm p-8">
+          <Reveal delay={120} className="bg-zinc-900 border border-zinc-700 rounded-sm p-8">
             {formSubmitted ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-[#b5e22e]/10 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -1219,7 +1344,7 @@ export default function LandingPage() {
                 </button>
               </form>
             )}
-          </div>
+          </Reveal>
         </div>
       </section>
 
