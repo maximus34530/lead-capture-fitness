@@ -160,6 +160,42 @@ function useParallax<T extends HTMLElement>(speed = 0.12) {
   return ref;
 }
 
+// ─── Smooth Scroll (eased, header-aware) ────────────────────────────────────
+
+const HEADER_OFFSET = 80;
+
+function smoothScrollTo(targetY: number, duration = 1100) {
+  if (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    window.scrollTo(0, targetY);
+    return;
+  }
+  const startY = window.scrollY;
+  const distance = targetY - startY;
+  if (Math.abs(distance) < 4) return;
+  const startTime = performance.now();
+  const ease = (t: number) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  const step = (now: number) => {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    window.scrollTo(0, startY + distance * ease(progress));
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function scrollToHash(hash: string) {
+  const target = document.querySelector(hash);
+  if (!target) return;
+  const targetY =
+    target.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+  smoothScrollTo(targetY);
+}
+
 // ─── Coach Video Player ──────────────────────────────────────────────────────
 
 function CoachVideoPlayer({ src, poster }: { src: string; poster: string }) {
@@ -231,7 +267,18 @@ export default function LandingPage() {
   const facilityBgRef = useParallax<HTMLImageElement>(0.08);
 
   const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!formRef.current) return;
+    const rect = formRef.current.getBoundingClientRect();
+    const targetY =
+      rect.top +
+      window.scrollY -
+      (window.innerHeight - rect.height) / 2;
+    smoothScrollTo(Math.max(targetY, 0));
+  };
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    e.preventDefault();
+    scrollToHash(hash);
   };
 
   const handleHeroSubmit = async (e: React.FormEvent) => {
@@ -398,18 +445,21 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-8">
             <a
               href="#programs"
+              onClick={(e) => handleNavClick(e, "#programs")}
               className="text-zinc-400 hover:text-white text-sm font-medium transition-colors tracking-wide uppercase"
             >
               Programs
             </a>
             <a
               href="#about"
+              onClick={(e) => handleNavClick(e, "#about")}
               className="text-zinc-400 hover:text-white text-sm font-medium transition-colors tracking-wide uppercase"
             >
               About
             </a>
             <a
               href="#gym"
+              onClick={(e) => handleNavClick(e, "#gym")}
               className="text-zinc-400 hover:text-white text-sm font-medium transition-colors tracking-wide uppercase"
             >
               Our Gym
@@ -626,7 +676,7 @@ export default function LandingPage() {
                         <p className="text-[#b5e22e] text-xs font-bold uppercase tracking-widest">
                           Multifit Gym
                         </p>
-                        <p className="text-zinc-300 text-xs mt-0.5">Dumaguete City · Est. 2018</p>
+                        <p className="text-zinc-300 text-xs mt-0.5">Dumaguete City · Est. 2022</p>
                       </div>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
@@ -640,7 +690,7 @@ export default function LandingPage() {
 
               {/* Floating stat */}
               <div className="absolute -top-4 -right-4 bg-[#b5e22e] text-black rounded-sm px-4 py-3 font-black">
-                <p className="text-2xl leading-none">6+</p>
+                <p className="text-2xl leading-none">4</p>
                 <p className="text-xs font-bold uppercase tracking-wide">Yrs Experience</p>
               </div>
             </Reveal>
@@ -980,7 +1030,7 @@ export default function LandingPage() {
                     {[
                       { val: "200+", label: "Athletes Coached" },
                       { val: "12+", label: "Countries" },
-                      { val: "6+", label: "Years" },
+                      { val: "4+", label: "Years" },
                     ].map(({ val, label }) => (
                       <div
                         key={label}
@@ -1010,7 +1060,7 @@ export default function LandingPage() {
                       {[
                         { val: "200+", label: "Athletes Coached" },
                         { val: "12+", label: "Countries" },
-                        { val: "6+", label: "Years" },
+                        { val: "4+", label: "Years" },
                       ].map(({ val, label }) => (
                         <div
                           key={label}
@@ -1129,9 +1179,6 @@ export default function LandingPage() {
                 </span>
               </a>
             </div>
-            <p className="text-zinc-600 text-xs mt-5">
-              Opens in a new tab — your application stays right here.
-            </p>
           </Reveal>
         </div>
       </section>
