@@ -7,7 +7,6 @@ import {
   Phone,
   Instagram,
   Facebook,
-  ChevronDown,
   CheckCircle,
   ArrowRight,
   Star,
@@ -25,40 +24,6 @@ import {
   coachIntroVideo,
 } from "../gym-images";
 import { supabase } from "../../lib/supabase";
-
-// ─── Accordion ───────────────────────────────────────────────────────────────
-
-function AccordionItem({
-  question,
-  answer,
-  isOpen,
-  onToggle,
-}: {
-  question: string;
-  answer: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="border border-zinc-800 rounded-lg overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-zinc-900 transition-colors duration-200"
-      >
-        <span className="text-white font-semibold text-base pr-4">{question}</span>
-        <ChevronDown
-          className={`text-[#b5e22e] shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-          size={20}
-        />
-      </button>
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[32rem]" : "max-h-0"}`}
-      >
-        <p className="px-6 pb-5 text-zinc-400 text-sm leading-relaxed">{answer}</p>
-      </div>
-    </div>
-  );
-}
 
 // ─── Scroll Reveal ──────────────────────────────────────────────────────────
 
@@ -244,12 +209,6 @@ function CoachVideoPlayer({ src, poster }: { src: string; poster: string }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const [heroPhone, setHeroPhone] = useState("");
-  const [heroCountry, setHeroCountry] = useState("PH");
-  const [heroSubmitting, setHeroSubmitting] = useState(false);
-  const [heroError, setHeroError] = useState<string | null>(null);
-  const [heroSubmitted, setHeroSubmitted] = useState(false);
-
   const [formFirstName, setFormFirstName] = useState("");
   const [formLastName, setFormLastName] = useState("");
   const [formEmail, setFormEmail] = useState("");
@@ -258,9 +217,6 @@ export default function LandingPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
-
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [showAllFaqs, setShowAllFaqs] = useState(false);
 
   const formRef = useRef<HTMLDivElement>(null);
   const heroBgRef = useParallax<HTMLImageElement>(0.14);
@@ -279,38 +235,6 @@ export default function LandingPage() {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
     e.preventDefault();
     scrollToHash(hash);
-  };
-
-  const handleHeroSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (heroSubmitting) return;
-    setHeroSubmitting(true);
-    setHeroError(null);
-
-    const country = countries.find((c) => c.code === heroCountry);
-    if (!country) {
-      setHeroError("Please select a country.");
-      setHeroSubmitting(false);
-      return;
-    }
-
-    const { error } = await supabase.from("leads").insert({
-      source: "hero",
-      country_code: heroCountry,
-      dial_code: country.dial,
-      phone: heroPhone.trim(),
-    });
-
-    if (error) {
-      console.error("Hero lead insert failed:", error);
-      setHeroError("Couldn't save your number. Please try again.");
-      setHeroSubmitting(false);
-      return;
-    }
-
-    setHeroSubmitted(true);
-    setHeroSubmitting(false);
-    setTimeout(() => scrollToForm(), 400);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -347,64 +271,6 @@ export default function LandingPage() {
     setFormSubmitting(false);
   };
 
-  const faqs = [
-    {
-      question: "I've been in a calorie deficit for 6 weeks but the scale won't budge. What am I doing wrong?",
-      answer:
-        "Usually you're eating more than you think. Cooking oil, sauces, the bites you don't log, the weekend meals. Or your watch is lying about how many calories you burn. Tighten up the tracking for 2 weeks and the scale moves. Cutting calories more isn't the answer.",
-    },
-    {
-      question: "I get lower back pain every time I squat or deadlift. Is it my form, or am I just weak?",
-      answer:
-        "Almost always your bracing or hip hinge breaking down once the bar gets heavy. Send Jokko a video and he'll spot it fast. We drop the weight, fix the pattern, then build your glutes and hamstrings. A few weeks later you're lifting heavier with no pain.",
-    },
-    {
-      question: "I've been lifting consistently for 8 months and barely see any muscle. What's wrong?",
-      answer:
-        "Three things. You're probably not eating enough. You're probably stopping 4 or 5 reps before you actually need to. And you're switching programs too often. Fix those and stick to one plan for 12 weeks. Strength goes up, muscle follows.",
-    },
-    {
-      question: "Do I really have to track macros, or can I just eat clean?",
-      answer:
-        "Eating clean is good, but you can still get fat on chicken and rice if the portions are huge. Track it for 2 or 3 months so you know what a serving actually looks like. After that you can eyeball it. You learn the skill once, not track forever.",
-    },
-    {
-      question: "How much protein do I actually need? Is 1g per pound real?",
-      answer:
-        "0.7 to 1g per pound of bodyweight is plenty. Anything more is just expensive pee. Jokko picks your number based on your weight, your goal, and what you'll actually hit every day.",
-    },
-    {
-      question: "Will doing cardio kill my gains?",
-      answer:
-        "No. That myth comes from guys running an hour a day while barely eating. Two or three cardio sessions a week alongside lifting actually helps your recovery and your heart. It isn't killing anything.",
-    },
-    {
-      question: "My knees cave in when I squat heavy. How do I fix it?",
-      answer:
-        "Your glutes are weak. Telling yourself to push your knees out won't fix it on its own. We add band squats, Bulgarian split squats, and step-ups. A few weeks in, your knees stay where they should.",
-    },
-    {
-      question: "I'm skinny-fat. Should I cut first or bulk first?",
-      answer:
-        "Cut first. Small deficit, heavy lifting, high protein. Get your body fat down to a healthier range, then start adding food slowly. Bulking when you're already soft just makes you softer, and the next cut takes twice as long.",
-    },
-    {
-      question: "How do I lose belly fat specifically? I've been doing tons of ab work.",
-      answer:
-        "You can't spot reduce. Crunches build the abs underneath, but you won't see them until you drop overall body fat. The plan is simple. Small deficit, lots of protein, lift heavy, sleep 7 to 8 hours, walk 8 to 10k steps a day. Do that and the abs show up.",
-    },
-    {
-      question: "Is being sore the day after a workout a sign that it worked?",
-      answer:
-        "No. Soreness mostly means your body wasn't used to what you did. Beginners get sore from anything. Advanced lifters grow without much soreness at all. What matters is whether you're adding weight or reps over time, not how hard it is to walk the next day.",
-    },
-    {
-      question: "I train hard 5x a week but feel tired and unmotivated all the time. Am I overtraining?",
-      answer:
-        "You're probably eating too little, sleeping too little, or stressed out of your mind. Not overtrained. Your body doesn't care if the stress is from training or work, it all adds up. Eat more, sleep more, and the energy comes back fast.",
-    },
-  ];
-
   const countries = [
     { code: "PH", flag: "🇵🇭", name: "Philippines", dial: "+63" },
     { code: "US", flag: "🇺🇸", name: "United States", dial: "+1" },
@@ -424,7 +290,6 @@ export default function LandingPage() {
     { code: "NL", flag: "🇳🇱", name: "Netherlands", dial: "+31" },
   ];
 
-  const heroDial = countries.find((c) => c.code === heroCountry)?.dial ?? "";
   const formDial = countries.find((c) => c.code === formCountry)?.dial ?? "";
 
   return (
@@ -495,15 +360,15 @@ export default function LandingPage() {
           <div className="max-w-3xl">
             {/* Eyebrow */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-px w-8 bg-[#b5e22e]" />
-              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+              <div className="h-px w-8 bg-[#b5e22e] shrink-0" />
+              <span className="text-[#b5e22e] text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em]">
                 Multifit Gym · Dumaguete City, Philippines
               </span>
             </div>
 
             {/* Headline */}
             <h1
-              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight uppercase mb-6"
+              className="text-[2.75rem] sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight uppercase mb-6"
               style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
             >
               <span className="block text-white">Engineered</span>
@@ -512,72 +377,27 @@ export default function LandingPage() {
               <span className="block text-white">Worldwide.</span>
             </h1>
 
-            <p className="text-zinc-300 text-lg leading-relaxed mb-10 max-w-xl">
+            <p className="text-zinc-300 text-base sm:text-lg leading-relaxed mb-10 max-w-xl">
               Jokko Centeno — International Fitness Expert & Gym Owner. Elite online coaching for
               busy professionals. Built at Multifit Gym, Dumaguete City.
             </p>
 
-            {/* Hero Lead Capture */}
-            <div className="bg-zinc-900/80 border border-zinc-700/60 rounded-sm p-6 max-w-lg backdrop-blur-sm">
-              {heroSubmitted ? (
-                <div className="flex items-center gap-3 py-3">
-                  <CheckCircle className="text-[#b5e22e]" size={22} />
-                  <div>
-                    <p className="text-white font-semibold">Slot request received.</p>
-                    <p className="text-zinc-400 text-sm">Complete your application below.</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4">
-                    Secure Your Coaching Slot
-                  </p>
-                  <form onSubmit={handleHeroSubmit} className="flex gap-2">
-                    <div className="flex flex-1 border border-zinc-700 rounded-sm overflow-hidden bg-zinc-800/60 focus-within:border-[#b5e22e] transition-colors">
-                      <select
-                        value={heroCountry}
-                        onChange={(e) => setHeroCountry(e.target.value)}
-                        disabled={heroSubmitting}
-                        aria-label="Country"
-                        className="bg-transparent text-zinc-300 text-sm pl-2 pr-1 py-3 outline-none border-r border-zinc-700 max-w-[88px] disabled:opacity-60"
-                      >
-                        {countries.map((c) => (
-                          <option key={c.code} value={c.code} className="bg-zinc-900">
-                            {c.flag} {c.dial}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="flex items-center text-zinc-400 text-sm px-2 select-none border-r border-zinc-700">
-                        {heroDial}
-                      </span>
-                      <input
-                        type="tel"
-                        value={heroPhone}
-                        onChange={(e) => setHeroPhone(e.target.value)}
-                        placeholder="Your number"
-                        required
-                        disabled={heroSubmitting}
-                        className="flex-1 bg-transparent text-white placeholder:text-zinc-500 text-sm px-3 py-3 outline-none min-w-0 disabled:opacity-60"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={heroSubmitting}
-                      className="bg-[#b5e22e] text-black font-bold text-sm px-5 py-3 rounded-sm hover:bg-[#c8f03a] transition-colors uppercase tracking-wide shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {heroSubmitting ? "Saving..." : "Secure Slot"}
-                    </button>
-                  </form>
-                  {heroError && (
-                    <p className="text-red-400 text-xs mt-3" role="alert">
-                      {heroError}
-                    </p>
-                  )}
-                  <p className="text-zinc-600 text-xs mt-3">
-                    No spam. Coach Jokko texts you directly on WhatsApp within 24 hrs.
-                  </p>
-                </>
-              )}
+            {/* Hero CTA */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 max-w-lg">
+              <button
+                type="button"
+                onClick={scrollToForm}
+                className="group bg-[#b5e22e] text-black font-black text-sm sm:text-base px-7 py-4 rounded-sm hover:bg-[#c8f03a] transition-all duration-200 uppercase tracking-widest inline-flex items-center justify-center gap-2 shadow-[0_0_32px_rgba(181,226,46,0.25)] hover:shadow-[0_0_44px_rgba(181,226,46,0.4)]"
+              >
+                Apply for Coaching
+                <ArrowRight
+                  size={18}
+                  className="transition-transform duration-200 group-hover:translate-x-1"
+                />
+              </button>
+              <p className="text-zinc-500 text-xs leading-relaxed">
+                No spam. Coach Jokko texts you directly on WhatsApp within 24 hrs.
+              </p>
             </div>
 
             {/* Trust signals */}
@@ -1183,73 +1003,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section className="py-24 border-t border-zinc-800/60">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="flex items-center justify-center gap-3 mb-5">
-                <div className="h-px w-8 bg-[#b5e22e]" />
-                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                  FAQ
-                </span>
-                <div className="h-px w-8 bg-[#b5e22e]" />
-              </div>
-              <h2
-                className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
-                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-              >
-                Frequently Asked Questions
-              </h2>
-              <p className="text-zinc-400 text-sm">
-                Real questions from real lifters. Form, fat loss, muscle gain, plateaus, and the
-                stuff most people are afraid to ask.
-              </p>
-            </div>
-          </Reveal>
-
-          <div className="space-y-3">
-            {(showAllFaqs ? faqs : faqs.slice(0, 3)).map((faq, i) => (
-              <AccordionItem
-                key={i}
-                question={faq.question}
-                answer={faq.answer}
-                isOpen={openFaq === i}
-                onToggle={() => setOpenFaq(openFaq === i ? null : i)}
-              />
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                if (showAllFaqs) {
-                  setOpenFaq(null);
-                }
-                setShowAllFaqs((prev) => !prev);
-              }}
-              className="group inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] text-white text-xs font-bold uppercase tracking-widest px-6 py-3 rounded-sm transition-all duration-200"
-            >
-              {showAllFaqs
-                ? "Show fewer questions"
-                : `Show ${faqs.length - 3} more questions`}
-              <ChevronDown
-                size={16}
-                className={`text-[#b5e22e] transition-transform duration-300 ${
-                  showAllFaqs ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {!showAllFaqs && (
-              <p className="text-zinc-600 text-xs mt-3">
-                Still wondering? Coach Jokko answers your specific situation directly on WhatsApp.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* ── LEAD CAPTURE FORM ── */}
       <section ref={formRef} className="py-24 border-t border-zinc-800/60 bg-zinc-950">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1342,7 +1095,7 @@ export default function LandingPage() {
                       value={formCountry}
                       onChange={(e) => setFormCountry(e.target.value)}
                       aria-label="Country"
-                      className="bg-zinc-700 text-zinc-200 text-sm px-3 py-3 outline-none border-r border-zinc-600 max-w-[160px]"
+                      className="bg-zinc-700 text-zinc-200 text-sm pl-3 pr-2 py-3 outline-none border-r border-zinc-600 w-[96px] sm:w-[160px] shrink-0"
                     >
                       {countries.map((c) => (
                         <option key={c.code} value={c.code} className="bg-zinc-900">
@@ -1350,16 +1103,16 @@ export default function LandingPage() {
                         </option>
                       ))}
                     </select>
-                    <span className="flex items-center text-zinc-400 text-sm px-3 select-none border-r border-zinc-600 whitespace-nowrap">
+                    <span className="flex items-center text-zinc-400 text-sm px-2 sm:px-3 select-none border-r border-zinc-600 whitespace-nowrap shrink-0">
                       {formDial}
                     </span>
                     <input
                       type="tel"
                       value={formPhone}
                       onChange={(e) => setFormPhone(e.target.value)}
-                      placeholder="Your WhatsApp number"
+                      placeholder="WhatsApp number"
                       required
-                      className="flex-1 bg-transparent text-white placeholder:text-zinc-500 text-sm px-4 py-3 outline-none min-w-0"
+                      className="flex-1 bg-transparent text-white placeholder:text-zinc-500 text-sm px-3 sm:px-4 py-3 outline-none min-w-0 w-full"
                     />
                   </div>
                   <p className="text-zinc-600 text-xs mt-2">
