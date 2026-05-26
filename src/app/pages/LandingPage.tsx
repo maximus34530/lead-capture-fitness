@@ -332,9 +332,10 @@ export default function LandingPage() {
           </nav>
           <button
             onClick={scrollToForm}
-            className="bg-[#b5e22e] text-black text-sm font-bold px-5 py-2.5 rounded-sm uppercase tracking-wider hover:bg-[#c8f03a] transition-colors duration-200"
+            className="bg-[#b5e22e] text-black text-xs sm:text-sm font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-sm uppercase tracking-wider hover:bg-[#c8f03a] transition-colors duration-200 whitespace-nowrap"
           >
-            Apply for Coaching
+            <span className="sm:hidden">Apply</span>
+            <span className="hidden sm:inline">Apply for Coaching</span>
           </button>
         </div>
       </header>
