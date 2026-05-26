@@ -1,0 +1,1348 @@
+import { useState, useRef } from "react";
+import { Link } from "react-router";
+import {
+  MapPin,
+  Clock,
+  Phone,
+  Instagram,
+  Facebook,
+  ChevronDown,
+  CheckCircle,
+  ArrowRight,
+  Star,
+  Globe,
+  Shield,
+  TrendingUp,
+  Users,
+  Play,
+} from "lucide-react";
+import {
+  heroImage,
+  facilityImage,
+  coachImage,
+  galleryImages,
+  coachIntroVideo,
+} from "../gym-images";
+import { supabase } from "../../lib/supabase";
+
+// ─── Accordion ───────────────────────────────────────────────────────────────
+
+function AccordionItem({
+  question,
+  answer,
+  isOpen,
+  onToggle,
+}: {
+  question: string;
+  answer: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="border border-zinc-800 rounded-lg overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-zinc-900 transition-colors duration-200"
+      >
+        <span className="text-white font-semibold text-base pr-4">{question}</span>
+        <ChevronDown
+          className={`text-[#b5e22e] shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+          size={20}
+        />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[32rem]" : "max-h-0"}`}
+      >
+        <p className="px-6 pb-5 text-zinc-400 text-sm leading-relaxed">{answer}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Coach Video Player ──────────────────────────────────────────────────────
+
+function CoachVideoPlayer({ src, poster }: { src: string; poster: string }) {
+  const [playing, setPlaying] = useState(false);
+
+  if (playing) {
+    return (
+      <video
+        src={src}
+        poster={poster}
+        autoPlay
+        controls
+        playsInline
+        className="w-full h-[480px] object-cover rounded-sm bg-black"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setPlaying(true)}
+      aria-label="Play coach intro video"
+      className="group relative w-full h-[480px] rounded-sm overflow-hidden block cursor-pointer"
+    >
+      <img
+        src={poster}
+        alt="Coach Jokko Centeno at Multifit Gym"
+        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="bg-[#b5e22e] text-black rounded-full p-5 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_40px_rgba(181,226,46,0.45)]">
+          <Play size={28} fill="currentColor" className="ml-1" />
+        </div>
+      </div>
+      <div className="absolute top-4 left-4">
+        <span className="text-[#b5e22e] text-[10px] font-bold uppercase tracking-widest bg-black/70 border border-[#b5e22e]/30 px-2.5 py-1 rounded-sm backdrop-blur-sm">
+          ▶ Watch · Meet Coach Jokko
+        </span>
+      </div>
+    </button>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function LandingPage() {
+  const [heroPhone, setHeroPhone] = useState("");
+  const [heroCountry, setHeroCountry] = useState("PH");
+  const [heroSubmitting, setHeroSubmitting] = useState(false);
+  const [heroError, setHeroError] = useState<string | null>(null);
+  const [heroSubmitted, setHeroSubmitted] = useState(false);
+
+  const [formFirstName, setFormFirstName] = useState("");
+  const [formLastName, setFormLastName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [formCountry, setFormCountry] = useState("PH");
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showAllFaqs, setShowAllFaqs] = useState(false);
+
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const handleHeroSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (heroSubmitting) return;
+    setHeroSubmitting(true);
+    setHeroError(null);
+
+    const country = countries.find((c) => c.code === heroCountry);
+    if (!country) {
+      setHeroError("Please select a country.");
+      setHeroSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from("leads").insert({
+      source: "hero",
+      country_code: heroCountry,
+      dial_code: country.dial,
+      phone: heroPhone.trim(),
+    });
+
+    if (error) {
+      console.error("Hero lead insert failed:", error);
+      setHeroError("Couldn't save your number. Please try again.");
+      setHeroSubmitting(false);
+      return;
+    }
+
+    setHeroSubmitted(true);
+    setHeroSubmitting(false);
+    setTimeout(() => scrollToForm(), 400);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formSubmitting) return;
+    setFormSubmitting(true);
+    setFormError(null);
+
+    const country = countries.find((c) => c.code === formCountry);
+    if (!country) {
+      setFormError("Please select a country.");
+      setFormSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from("leads").insert({
+      source: "main",
+      first_name: formFirstName.trim(),
+      last_name: formLastName.trim(),
+      email: formEmail.trim().toLowerCase(),
+      country_code: formCountry,
+      dial_code: country.dial,
+      phone: formPhone.trim(),
+    });
+
+    if (error) {
+      console.error("Main lead insert failed:", error);
+      setFormError("Couldn't submit your application. Please try again.");
+      setFormSubmitting(false);
+      return;
+    }
+
+    setFormSubmitted(true);
+    setFormSubmitting(false);
+  };
+
+  const faqs = [
+    {
+      question: "I've been in a calorie deficit for 6 weeks but the scale won't budge. What am I doing wrong?",
+      answer:
+        "Usually you're eating more than you think. Cooking oil, sauces, the bites you don't log, the weekend meals. Or your watch is lying about how many calories you burn. Tighten up the tracking for 2 weeks and the scale moves. Cutting calories more isn't the answer.",
+    },
+    {
+      question: "I get lower back pain every time I squat or deadlift. Is it my form, or am I just weak?",
+      answer:
+        "Almost always your bracing or hip hinge breaking down once the bar gets heavy. Send Jokko a video and he'll spot it fast. We drop the weight, fix the pattern, then build your glutes and hamstrings. A few weeks later you're lifting heavier with no pain.",
+    },
+    {
+      question: "I've been lifting consistently for 8 months and barely see any muscle. What's wrong?",
+      answer:
+        "Three things. You're probably not eating enough. You're probably stopping 4 or 5 reps before you actually need to. And you're switching programs too often. Fix those and stick to one plan for 12 weeks. Strength goes up, muscle follows.",
+    },
+    {
+      question: "Do I really have to track macros, or can I just eat clean?",
+      answer:
+        "Eating clean is good, but you can still get fat on chicken and rice if the portions are huge. Track it for 2 or 3 months so you know what a serving actually looks like. After that you can eyeball it. You learn the skill once, not track forever.",
+    },
+    {
+      question: "How much protein do I actually need? Is 1g per pound real?",
+      answer:
+        "0.7 to 1g per pound of bodyweight is plenty. Anything more is just expensive pee. Jokko picks your number based on your weight, your goal, and what you'll actually hit every day.",
+    },
+    {
+      question: "Will doing cardio kill my gains?",
+      answer:
+        "No. That myth comes from guys running an hour a day while barely eating. Two or three cardio sessions a week alongside lifting actually helps your recovery and your heart. It isn't killing anything.",
+    },
+    {
+      question: "My knees cave in when I squat heavy. How do I fix it?",
+      answer:
+        "Your glutes are weak. Telling yourself to push your knees out won't fix it on its own. We add band squats, Bulgarian split squats, and step-ups. A few weeks in, your knees stay where they should.",
+    },
+    {
+      question: "I'm skinny-fat. Should I cut first or bulk first?",
+      answer:
+        "Cut first. Small deficit, heavy lifting, high protein. Get your body fat down to a healthier range, then start adding food slowly. Bulking when you're already soft just makes you softer, and the next cut takes twice as long.",
+    },
+    {
+      question: "How do I lose belly fat specifically? I've been doing tons of ab work.",
+      answer:
+        "You can't spot reduce. Crunches build the abs underneath, but you won't see them until you drop overall body fat. The plan is simple. Small deficit, lots of protein, lift heavy, sleep 7 to 8 hours, walk 8 to 10k steps a day. Do that and the abs show up.",
+    },
+    {
+      question: "Is being sore the day after a workout a sign that it worked?",
+      answer:
+        "No. Soreness mostly means your body wasn't used to what you did. Beginners get sore from anything. Advanced lifters grow without much soreness at all. What matters is whether you're adding weight or reps over time, not how hard it is to walk the next day.",
+    },
+    {
+      question: "I train hard 5x a week but feel tired and unmotivated all the time. Am I overtraining?",
+      answer:
+        "You're probably eating too little, sleeping too little, or stressed out of your mind. Not overtrained. Your body doesn't care if the stress is from training or work, it all adds up. Eat more, sleep more, and the energy comes back fast.",
+    },
+  ];
+
+  const countries = [
+    { code: "PH", flag: "🇵🇭", name: "Philippines", dial: "+63" },
+    { code: "US", flag: "🇺🇸", name: "United States", dial: "+1" },
+    { code: "CA", flag: "🇨🇦", name: "Canada", dial: "+1" },
+    { code: "GB", flag: "🇬🇧", name: "United Kingdom", dial: "+44" },
+    { code: "AU", flag: "🇦🇺", name: "Australia", dial: "+61" },
+    { code: "SG", flag: "🇸🇬", name: "Singapore", dial: "+65" },
+    { code: "MY", flag: "🇲🇾", name: "Malaysia", dial: "+60" },
+    { code: "HK", flag: "🇭🇰", name: "Hong Kong", dial: "+852" },
+    { code: "JP", flag: "🇯🇵", name: "Japan", dial: "+81" },
+    { code: "AE", flag: "🇦🇪", name: "UAE", dial: "+971" },
+    { code: "SA", flag: "🇸🇦", name: "Saudi Arabia", dial: "+966" },
+    { code: "DE", flag: "🇩🇪", name: "Germany", dial: "+49" },
+    { code: "FR", flag: "🇫🇷", name: "France", dial: "+33" },
+    { code: "ES", flag: "🇪🇸", name: "Spain", dial: "+34" },
+    { code: "IT", flag: "🇮🇹", name: "Italy", dial: "+39" },
+    { code: "NL", flag: "🇳🇱", name: "Netherlands", dial: "+31" },
+  ];
+
+  const heroDial = countries.find((c) => c.code === heroCountry)?.dial ?? "";
+  const formDial = countries.find((c) => c.code === formCountry)?.dial ?? "";
+
+  return (
+    <div
+      className="min-h-screen bg-[#09090b] text-white overflow-x-hidden"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
+      {/* ── STICKY HEADER ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <a href="#" className="flex items-center gap-2">
+            <span className="text-[#b5e22e] font-black text-lg tracking-tight uppercase">
+              MULTIFIT
+            </span>
+            <span className="text-zinc-500 font-light text-lg">×</span>
+            <span className="text-white font-black text-lg tracking-tight uppercase">JOKKO</span>
+          </a>
+          <nav className="hidden md:flex items-center gap-8">
+            <a
+              href="#programs"
+              className="text-zinc-400 hover:text-white text-sm font-medium transition-colors tracking-wide uppercase"
+            >
+              Programs
+            </a>
+            <a
+              href="#about"
+              className="text-zinc-400 hover:text-white text-sm font-medium transition-colors tracking-wide uppercase"
+            >
+              About
+            </a>
+            <a
+              href="#gym"
+              className="text-zinc-400 hover:text-white text-sm font-medium transition-colors tracking-wide uppercase"
+            >
+              Our Gym
+            </a>
+          </nav>
+          <button
+            onClick={scrollToForm}
+            className="bg-[#b5e22e] text-black text-sm font-bold px-5 py-2.5 rounded-sm uppercase tracking-wider hover:bg-[#c8f03a] transition-colors duration-200"
+          >
+            Apply for Coaching
+          </button>
+        </div>
+      </header>
+
+      {/* ── HERO ── */}
+      <section className="relative pt-16 min-h-screen flex items-center overflow-hidden">
+        {/* Background image with overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={heroImage}
+            alt="Elite gym training"
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/80 to-[#09090b]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent" />
+        </div>
+
+        {/* Neon accent line */}
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-[#b5e22e] to-transparent opacity-60" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="max-w-3xl">
+            {/* Eyebrow */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                Multifit Gym · Dumaguete City, Philippines
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight uppercase mb-6"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              <span className="block text-white">Engineered</span>
+              <span className="block text-white">at Multifit.</span>
+              <span className="block text-[#b5e22e]">Delivered</span>
+              <span className="block text-white">Worldwide.</span>
+            </h1>
+
+            <p className="text-zinc-300 text-lg leading-relaxed mb-10 max-w-xl">
+              Jokko Centeno — International Fitness Expert & Gym Owner. Elite online coaching for
+              busy professionals. Built at Multifit Gym, Dumaguete City.
+            </p>
+
+            {/* Hero Lead Capture */}
+            <div className="bg-zinc-900/80 border border-zinc-700/60 rounded-sm p-6 max-w-lg backdrop-blur-sm">
+              {heroSubmitted ? (
+                <div className="flex items-center gap-3 py-3">
+                  <CheckCircle className="text-[#b5e22e]" size={22} />
+                  <div>
+                    <p className="text-white font-semibold">Slot request received.</p>
+                    <p className="text-zinc-400 text-sm">Complete your application below.</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4">
+                    Secure Your Coaching Slot
+                  </p>
+                  <form onSubmit={handleHeroSubmit} className="flex gap-2">
+                    <div className="flex flex-1 border border-zinc-700 rounded-sm overflow-hidden bg-zinc-800/60 focus-within:border-[#b5e22e] transition-colors">
+                      <select
+                        value={heroCountry}
+                        onChange={(e) => setHeroCountry(e.target.value)}
+                        disabled={heroSubmitting}
+                        aria-label="Country"
+                        className="bg-transparent text-zinc-300 text-sm pl-2 pr-1 py-3 outline-none border-r border-zinc-700 max-w-[88px] disabled:opacity-60"
+                      >
+                        {countries.map((c) => (
+                          <option key={c.code} value={c.code} className="bg-zinc-900">
+                            {c.flag} {c.dial}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="flex items-center text-zinc-400 text-sm px-2 select-none border-r border-zinc-700">
+                        {heroDial}
+                      </span>
+                      <input
+                        type="tel"
+                        value={heroPhone}
+                        onChange={(e) => setHeroPhone(e.target.value)}
+                        placeholder="Your number"
+                        required
+                        disabled={heroSubmitting}
+                        className="flex-1 bg-transparent text-white placeholder:text-zinc-500 text-sm px-3 py-3 outline-none min-w-0 disabled:opacity-60"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={heroSubmitting}
+                      className="bg-[#b5e22e] text-black font-bold text-sm px-5 py-3 rounded-sm hover:bg-[#c8f03a] transition-colors uppercase tracking-wide shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {heroSubmitting ? "Saving..." : "Secure Slot"}
+                    </button>
+                  </form>
+                  {heroError && (
+                    <p className="text-red-400 text-xs mt-3" role="alert">
+                      {heroError}
+                    </p>
+                  )}
+                  <p className="text-zinc-600 text-xs mt-3">
+                    No spam. Coach Jokko texts you directly on WhatsApp within 24 hrs.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Trust signals */}
+            <div className="flex flex-wrap items-center gap-6 mt-8">
+              {[
+                { icon: Globe, text: "Coaching in 12+ Countries" },
+                { icon: Shield, text: "Real Gym. Real Coach." },
+                { icon: TrendingUp, text: "High-Ticket Results" },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-2">
+                  <Icon size={14} className="text-[#b5e22e]" />
+                  <span className="text-zinc-400 text-xs font-medium uppercase tracking-wide">
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PHYSICAL BASE PROOF ── */}
+      <section id="gym" className="py-24 border-t border-zinc-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Left: Text */}
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-px w-8 bg-[#b5e22e]" />
+                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                  Physical Base
+                </span>
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl font-black uppercase leading-tight mb-6 tracking-tight"
+                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+              >
+                <span className="text-white">The Gym Where</span>
+                <br />
+                <span className="text-[#b5e22e]">The Methods</span>
+                <br />
+                <span className="text-white">Were Forged.</span>
+              </h2>
+              <p className="text-zinc-400 leading-relaxed mb-6">
+                Most online coaches sell you a PDF and a login. Jokko&apos;s programming is
+                developed, tested, and refined daily inside a real facility — Multifit Gym in
+                Dumaguete City. Every protocol you receive online has been proven on real athletes
+                in person first.
+              </p>
+              <div className="space-y-3">
+                {[
+                  "Real rooftop gym floor — not a home-workout PDF shop",
+                  "International credibility from a licensed hybrid performance facility",
+                  "Systems built for busy professionals — not weekend hobbyists",
+                ].map((point) => (
+                  <div key={point} className="flex items-start gap-3">
+                    <CheckCircle size={16} className="text-[#b5e22e] shrink-0 mt-0.5" />
+                    <span className="text-zinc-300 text-sm">{point}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-8 p-4 bg-zinc-900 border border-zinc-800 rounded-sm">
+                <MapPin size={16} className="text-[#b5e22e] shrink-0" />
+                <span className="text-zinc-300 text-sm">
+                  Veterans Avenue, Daro, Dumaguete City, 6200 Negros Oriental, Philippines
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Facility Visual */}
+            <div className="relative">
+              <div className="relative rounded-sm overflow-hidden bg-zinc-900">
+                <img
+                  src={facilityImage}
+                  alt="Multifit Gym training floor"
+                  className="w-full h-80 lg:h-96 object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
+
+                {/* Grid overlay accent */}
+                <div
+                  className="absolute inset-0 opacity-10"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(181,226,46,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(181,226,46,0.3) 1px, transparent 1px)",
+                    backgroundSize: "40px 40px",
+                  }}
+                />
+
+                {/* Badge */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="bg-black/80 border border-[#b5e22e]/30 rounded-sm px-4 py-3 backdrop-blur-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[#b5e22e] text-xs font-bold uppercase tracking-widest">
+                          Multifit Gym
+                        </p>
+                        <p className="text-zinc-300 text-xs mt-0.5">Dumaguete City · Est. 2018</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={10} className="text-[#b5e22e] fill-[#b5e22e]" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating stat */}
+              <div className="absolute -top-4 -right-4 bg-[#b5e22e] text-black rounded-sm px-4 py-3 font-black">
+                <p className="text-2xl leading-none">6+</p>
+                <p className="text-xs font-bold uppercase tracking-wide">Yrs Experience</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── INSIDE MULTIFIT — auto-rendered photo gallery ── */}
+      {galleryImages.length > 0 && (
+        <section className="py-24 border-t border-zinc-800/60 bg-zinc-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+              <div>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="h-px w-8 bg-[#b5e22e]" />
+                  <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                    Inside Multifit
+                  </span>
+                </div>
+                <h2
+                  className="text-4xl lg:text-5xl font-black uppercase leading-tight tracking-tight"
+                  style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                >
+                  <span className="text-white">The Floor.</span>{" "}
+                  <span className="text-[#b5e22e]">The Iron.</span>{" "}
+                  <span className="text-white">The Standard.</span>
+                </h2>
+              </div>
+              <p className="text-zinc-400 text-sm max-w-md">
+                A look inside the facility where every program is built, tested, and refined daily —
+                Dumaguete City, Philippines.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {galleryImages.map((src, i) => (
+                <div
+                  key={src}
+                  className={`group relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-900 ${
+                    i % 5 === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"
+                  }`}
+                >
+                  <img
+                    src={src}
+                    alt={`Multifit Gym interior ${i + 1}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-100 opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-[#b5e22e] text-[10px] font-bold uppercase tracking-widest">
+                      Multifit · Dumaguete
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── PROGRAMS ── */}
+      <section id="programs" className="py-24 border-t border-zinc-800/60 bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                The Blueprint
+              </span>
+              <div className="h-px w-8 bg-[#b5e22e]" />
+            </div>
+            <h2
+              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              When You Train <span className="text-[#b5e22e]">Under Jokko</span>
+            </h2>
+            <p className="text-zinc-400 mt-4 max-w-xl mx-auto leading-relaxed">
+              From the day you apply to the day you don&apos;t recognize the man (or woman) in the
+              mirror — this is the exact path Jokko walks every client down.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="relative">
+              {/* Vertical timeline accent */}
+              <div className="absolute left-[31px] top-20 bottom-20 w-px bg-gradient-to-b from-transparent via-[#b5e22e]/30 to-transparent hidden md:block" />
+
+              <div className="space-y-6">
+                {[
+                  {
+                    num: "01",
+                    title: "The Intake",
+                    description:
+                      "After your application, Jokko personally reviews your goals, lifestyle, training history, injuries, and time constraints. No assistants. No templates. The first conversation that shapes everything that follows.",
+                    bullets: [
+                      "Personal WhatsApp message from Jokko within 12–24 hours",
+                      "Full audit: lifestyle, training history, injuries, time, goals",
+                      "Honest fit assessment — he turns clients away when it isn't right",
+                    ],
+                  },
+                  {
+                    num: "02",
+                    title: "The Blueprint",
+                    description:
+                      "Jokko architects your custom 90-day training, nutrition, and recovery system — engineered around your gym access, travel schedule, and the realities of your life. Not a template sold to a thousand people. Yours.",
+                    bullets: [
+                      "Personalized 90-day training arc with weekly progression",
+                      "Nutrition framework built for your cuisine, country, and travel",
+                      "Recovery, sleep, and stress protocols tuned to your load",
+                    ],
+                  },
+                  {
+                    num: "03",
+                    title: "The Execution",
+                    description:
+                      "You train. Jokko coaches. Every rep, every meal, every check-in tracked. Daily Voxer/WhatsApp accountability so you never train alone and never have to figure anything out by yourself.",
+                    bullets: [
+                      "Daily WhatsApp / Voxer check-ins with Jokko himself",
+                      "Video form analysis on every key lift",
+                      "Real-time programming adjustments — not week-late corrections",
+                    ],
+                  },
+                  {
+                    num: "04",
+                    title: "The Review",
+                    description:
+                      "Every 30 days: a full 1-on-1 performance review. Strength numbers, body composition, sleep, energy, mood. We look at what's working, what isn't, and recalibrate the next block.",
+                    bullets: [
+                      "Monthly 1-on-1 performance dashboard",
+                      "Data-driven adjustments — no guessing, no vibes",
+                      "Recalibrated next 30 days based on what your body actually did",
+                    ],
+                  },
+                  {
+                    num: "05",
+                    title: "The Transformation",
+                    description:
+                      "By month three, you're not on a program. You're a different person. Stronger. Leaner. Sharper. The body, energy, and presence that match the next chapter of your life.",
+                    bullets: [
+                      "Visible, measurable physical transformation",
+                      "The discipline and identity that outlast the coaching itself",
+                      "Methodology you've internalized — yours for life",
+                    ],
+                  },
+                ].map((step) => (
+                  <div
+                    key={step.num}
+                    className="relative grid grid-cols-[64px_1fr] md:grid-cols-[80px_1fr] gap-4 md:gap-6 items-start"
+                  >
+                    {/* Numbered marker */}
+                    <div className="relative shrink-0">
+                      <div className="w-16 h-16 bg-[#09090b] border-2 border-[#b5e22e] rounded-sm flex items-center justify-center shadow-[0_0_24px_rgba(181,226,46,0.18)]">
+                        <span
+                          className="text-[#b5e22e] text-2xl font-black"
+                          style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                        >
+                          {step.num}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Step content */}
+                    <div className="border border-zinc-800 rounded-sm p-6 bg-zinc-900/40 hover:border-zinc-700 transition-colors duration-300">
+                      <p className="text-[#b5e22e] text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
+                        Step {step.num}
+                      </p>
+                      <h3
+                        className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-3 leading-tight"
+                        style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                      >
+                        {step.title}
+                      </h3>
+                      <p className="text-zinc-400 text-sm leading-relaxed mb-5">
+                        {step.description}
+                      </p>
+                      <ul className="space-y-2.5">
+                        {step.bullets.map((b) => (
+                          <li key={b} className="flex items-start gap-2.5">
+                            <CheckCircle
+                              size={14}
+                              className="text-[#b5e22e] shrink-0 mt-0.5"
+                            />
+                            <span className="text-zinc-300 text-sm leading-relaxed">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Final CTA */}
+            <div className="text-center mt-14">
+              <p className="text-zinc-400 text-sm mb-5 max-w-md mx-auto">
+                Every transformation Jokko has guided started exactly the same way — with Step 01.
+              </p>
+              <button
+                onClick={scrollToForm}
+                className="bg-[#b5e22e] text-black font-black text-sm px-8 py-4 rounded-sm hover:bg-[#c8f03a] transition-colors duration-200 uppercase tracking-widest inline-flex items-center justify-center gap-2"
+              >
+                Start at Step 01 <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOCIAL PROOF ── */}
+      <section className="py-24 border-t border-zinc-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                Client Results
+              </span>
+              <div className="h-px w-8 bg-[#b5e22e]" />
+            </div>
+            <h2
+              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              Transformations That Speak
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Testimonial 1 — Didn't know how to lift */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300">
+              <div className="mb-4">
+                <span
+                  className="text-3xl font-black text-[#b5e22e] uppercase"
+                  style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                >
+                  From Zero To Confident
+                </span>
+              </div>
+              <p className="text-zinc-300 text-sm leading-relaxed mb-5">
+                "Never lifted before in my life. Coach Jokko walked me through every basic movement
+                on WhatsApp and fixed my form rep by rep. 4 months in and I actually look forward
+                to gym days now."
+              </p>
+              <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
+                <div>
+                  <p className="text-white font-semibold text-sm">Carlo M.</p>
+                  <p className="text-zinc-500 text-xs">Software Engineer</p>
+                </div>
+                <span className="text-zinc-600 text-xs uppercase tracking-wide">
+                  🇵🇭 Cebu City, PH
+                </span>
+              </div>
+            </div>
+
+            {/* Testimonial 2 — Accountability */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300">
+              <div className="mb-4">
+                <span
+                  className="text-3xl font-black text-[#b5e22e] uppercase"
+                  style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                >
+                  −12kg, 5x A Week
+                </span>
+              </div>
+              <p className="text-zinc-300 text-sm leading-relaxed mb-5">
+                "Every January I&apos;d sign up, by February tapos na. Coach Jokko texts me every
+                morning — &lsquo;Bro, anong oras gym today?&rsquo; Yun lang. 7 months straight, 12
+                kilos down."
+              </p>
+              <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
+                <div>
+                  <p className="text-white font-semibold text-sm">Joey R.</p>
+                  <p className="text-zinc-500 text-xs">Sales Manager</p>
+                </div>
+                <span className="text-zinc-600 text-xs uppercase tracking-wide">
+                  🇵🇭 Dumaguete City, PH
+                </span>
+              </div>
+            </div>
+
+            {/* Testimonial 3 — Didn't know what to eat */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 hover:border-zinc-700 transition-colors duration-300">
+              <div className="mb-4">
+                <span
+                  className="text-3xl font-black text-[#b5e22e] uppercase"
+                  style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                >
+                  −14kg Eating Filipino Food
+                </span>
+              </div>
+              <p className="text-zinc-300 text-sm leading-relaxed mb-5">
+                "Thought I had to give up rice and adobo forever. Coach built me a plan around
+                actual Filipino food. Down 14 kilos in 6 months and it never felt like a diet."
+              </p>
+              <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
+                <div>
+                  <p className="text-white font-semibold text-sm">Mariel V.</p>
+                  <p className="text-zinc-500 text-xs">Nurse</p>
+                </div>
+                <span className="text-zinc-600 text-xs uppercase tracking-wide">
+                  🇵🇭 Iloilo City, PH
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── ABOUT ── */}
+      <section id="about" className="py-24 border-t border-zinc-800/60 bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              {coachIntroVideo ? (
+                <>
+                  <CoachVideoPlayer src={coachIntroVideo} poster={coachImage} />
+                  <div className="grid grid-cols-3 gap-3 mt-4">
+                    {[
+                      { val: "200+", label: "Athletes Coached" },
+                      { val: "12+", label: "Countries" },
+                      { val: "6+", label: "Years" },
+                    ].map(({ val, label }) => (
+                      <div
+                        key={label}
+                        className="bg-zinc-900 border border-zinc-800 rounded-sm p-3 text-center"
+                      >
+                        <p
+                          className="text-[#b5e22e] text-xl font-black"
+                          style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                        >
+                          {val}
+                        </p>
+                        <p className="text-zinc-400 text-xs uppercase tracking-wide">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <img
+                    src={coachImage}
+                    alt="Coach Jokko Centeno at Multifit Gym"
+                    className="w-full h-[480px] object-cover rounded-sm opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/60 via-transparent to-transparent rounded-sm" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { val: "200+", label: "Athletes Coached" },
+                        { val: "12+", label: "Countries" },
+                        { val: "6+", label: "Years" },
+                      ].map(({ val, label }) => (
+                        <div
+                          key={label}
+                          className="bg-black/70 border border-zinc-800 rounded-sm p-3 text-center backdrop-blur-sm"
+                        >
+                          <p
+                            className="text-[#b5e22e] text-xl font-black"
+                            style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+                          >
+                            {val}
+                          </p>
+                          <p className="text-zinc-400 text-xs uppercase tracking-wide">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-px w-8 bg-[#b5e22e]" />
+                <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                  The Coach
+                </span>
+              </div>
+              <h2
+                className="text-4xl lg:text-5xl font-black uppercase leading-tight mb-6 tracking-tight"
+                style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+              >
+                <span className="text-white">Jokko Centeno</span>
+                <br />
+                <span className="text-[#b5e22e]">Hybrid Fitness</span>
+                <br />
+                <span className="text-white">Expert & Gym Owner</span>
+              </h2>
+              <p className="text-zinc-400 leading-relaxed mb-4">
+                Coach Jokko built Multifit Gym from the ground up in Dumaguete City — a fully
+                operational commercial training facility that serves elite local athletes and
+                expatriate professionals daily. His programming philosophy isn&apos;t drawn from
+                certification textbooks. It&apos;s drawn from years of live coaching on a real gym
+                floor.
+              </p>
+              <p className="text-zinc-400 leading-relaxed mb-8">
+                His online coaching extends that same methodology globally — adapted for time zones,
+                travel schedules, and the realities of a demanding professional life. If you want
+                coaching built on real-world evidence, not algorithm-generated templates, this is
+                it.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Users size={16} className="text-[#b5e22e]" />
+                  <span className="text-zinc-300 text-sm font-medium">Hybrid Fitness Expert</span>
+                </div>
+                <div className="w-px h-4 bg-zinc-700" />
+                <div className="flex items-center gap-2">
+                  <MapPin size={16} className="text-[#b5e22e]" />
+                  <span className="text-zinc-300 text-sm font-medium">Dumaguete City, PH</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOCIAL — Verify the coach is real ── */}
+      <section className="py-16 border-t border-zinc-800/60 bg-zinc-950">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-sm p-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                See The Daily Work
+              </span>
+              <div className="h-px w-8 bg-[#b5e22e]" />
+            </div>
+            <h3
+              className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-3"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              Real Gym. Real Athletes. <span className="text-[#b5e22e]">Real Daily Proof.</span>
+            </h3>
+            <p className="text-zinc-400 text-sm max-w-md mx-auto mb-6">
+              Follow Multifit Gym on social to see live training sessions, athlete progress, and
+              behind-the-scenes from the floor — updated daily.
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <a
+                href="https://www.instagram.com/multifit.gym/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow Multifit Gym on Instagram"
+                className="group flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] hover:bg-zinc-800/80 rounded-sm px-5 py-3 transition-all duration-200"
+              >
+                <Instagram size={18} className="text-[#b5e22e]" />
+                <span className="text-white text-sm font-bold uppercase tracking-wider">
+                  Instagram
+                </span>
+                <span className="text-zinc-500 text-xs group-hover:text-zinc-300 transition-colors">
+                  @multifit.gym
+                </span>
+              </a>
+              <a
+                href="https://www.facebook.com/MultiFitGymPh"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow Multifit Gym on Facebook"
+                className="group flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] hover:bg-zinc-800/80 rounded-sm px-5 py-3 transition-all duration-200"
+              >
+                <Facebook size={18} className="text-[#b5e22e]" />
+                <span className="text-white text-sm font-bold uppercase tracking-wider">
+                  Facebook
+                </span>
+                <span className="text-zinc-500 text-xs group-hover:text-zinc-300 transition-colors">
+                  Multifit Gym
+                </span>
+              </a>
+            </div>
+            <p className="text-zinc-600 text-xs mt-5">
+              Opens in a new tab — your application stays right here.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-24 border-t border-zinc-800/60">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                FAQ
+              </span>
+              <div className="h-px w-8 bg-[#b5e22e]" />
+            </div>
+            <h2
+              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              Frequently Asked Questions
+            </h2>
+            <p className="text-zinc-400 text-sm">
+              Real questions from real lifters. Form, fat loss, muscle gain, plateaus, and the
+              stuff most people are afraid to ask.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {(showAllFaqs ? faqs : faqs.slice(0, 3)).map((faq, i) => (
+              <AccordionItem
+                key={i}
+                question={faq.question}
+                answer={faq.answer}
+                isOpen={openFaq === i}
+                onToggle={() => setOpenFaq(openFaq === i ? null : i)}
+              />
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (showAllFaqs) {
+                  setOpenFaq(null);
+                }
+                setShowAllFaqs((prev) => !prev);
+              }}
+              className="group inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] text-white text-xs font-bold uppercase tracking-widest px-6 py-3 rounded-sm transition-all duration-200"
+            >
+              {showAllFaqs
+                ? "Show fewer questions"
+                : `Show ${faqs.length - 3} more questions`}
+              <ChevronDown
+                size={16}
+                className={`text-[#b5e22e] transition-transform duration-300 ${
+                  showAllFaqs ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {!showAllFaqs && (
+              <p className="text-zinc-600 text-xs mt-3">
+                Still wondering? Coach Jokko answers your specific situation directly on WhatsApp.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── LEAD CAPTURE FORM ── */}
+      <section ref={formRef} className="py-24 border-t border-zinc-800/60 bg-zinc-950">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                Apply Now
+              </span>
+              <div className="h-px w-8 bg-[#b5e22e]" />
+            </div>
+            <h2
+              className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-3"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              Secure Your Slot
+            </h2>
+            <p className="text-zinc-400 text-sm">
+              Limited coaching slots available. Coach Jokko personally reviews every application.
+            </p>
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-700 rounded-sm p-8">
+            {formSubmitted ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-[#b5e22e]/10 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle className="text-[#b5e22e]" size={32} />
+                </div>
+                <h3 className="text-white text-xl font-black uppercase mb-2">
+                  Application Received
+                </h3>
+                <p className="text-zinc-400 text-sm max-w-sm mx-auto">
+                  Coach Jokko will text you directly on WhatsApp within 12–24 hours to discuss your
+                  goals and confirm your fit.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleFormSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formFirstName}
+                      onChange={(e) => setFormFirstName(e.target.value)}
+                      placeholder="Your first name"
+                      required
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-sm px-4 py-3 text-white placeholder:text-zinc-500 text-sm outline-none focus:border-[#b5e22e] transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formLastName}
+                      onChange={(e) => setFormLastName(e.target.value)}
+                      placeholder="Your last name"
+                      required
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-sm px-4 py-3 text-white placeholder:text-zinc-500 text-sm outline-none focus:border-[#b5e22e] transition-colors duration-200"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-sm px-4 py-3 text-white placeholder:text-zinc-500 text-sm outline-none focus:border-[#b5e22e] transition-colors duration-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">
+                    WhatsApp / Phone Number *
+                  </label>
+                  <div className="flex border border-zinc-700 rounded-sm overflow-hidden bg-zinc-800 focus-within:border-[#b5e22e] transition-colors duration-200">
+                    <select
+                      value={formCountry}
+                      onChange={(e) => setFormCountry(e.target.value)}
+                      aria-label="Country"
+                      className="bg-zinc-700 text-zinc-200 text-sm px-3 py-3 outline-none border-r border-zinc-600 max-w-[160px]"
+                    >
+                      {countries.map((c) => (
+                        <option key={c.code} value={c.code} className="bg-zinc-900">
+                          {c.flag} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="flex items-center text-zinc-400 text-sm px-3 select-none border-r border-zinc-600 whitespace-nowrap">
+                      {formDial}
+                    </span>
+                    <input
+                      type="tel"
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      placeholder="Your WhatsApp number"
+                      required
+                      className="flex-1 bg-transparent text-white placeholder:text-zinc-500 text-sm px-4 py-3 outline-none min-w-0"
+                    />
+                  </div>
+                  <p className="text-zinc-600 text-xs mt-2">
+                    Coach Jokko will contact you directly via WhatsApp.
+                  </p>
+                </div>
+
+                {formError && (
+                  <p
+                    className="text-red-400 text-sm border border-red-400/40 bg-red-400/5 rounded-sm px-3 py-2"
+                    role="alert"
+                  >
+                    {formError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={formSubmitting}
+                  className="w-full bg-[#b5e22e] text-black font-black text-sm py-4 rounded-sm hover:bg-[#c8f03a] transition-colors duration-200 uppercase tracking-widest flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {formSubmitting ? (
+                    "Submitting..."
+                  ) : (
+                    <>
+                      Submit My Application <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="border-t border-zinc-800/60 bg-[#09090b] pt-16 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+            {/* Col 1 — Brand */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[#b5e22e] font-black text-lg tracking-tight uppercase">
+                  MULTIFIT
+                </span>
+                <span className="text-zinc-600 font-light">×</span>
+                <span className="text-white font-black text-lg tracking-tight uppercase">
+                  ONLINE
+                </span>
+              </div>
+              <p className="text-zinc-400 text-sm leading-relaxed mb-5 max-w-md">
+                Global remote coaching grounded in a real facility. Elite programming for
+                professionals, hybrid athletes, and competitors worldwide.
+              </p>
+              <div className="flex items-start gap-2">
+                <MapPin size={14} className="text-[#b5e22e] mt-0.5 shrink-0" />
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Veterans Avenue, Daro,
+                  <br />
+                  Dumaguete City, 6200
+                  <br />
+                  Negros Oriental, Philippines
+                </p>
+              </div>
+            </div>
+
+            {/* Col 2 — Gym Hours */}
+            <div>
+              <h4 className="text-white font-bold uppercase text-xs tracking-widest mb-5">
+                Multifit Gym Hours
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Clock size={13} className="text-[#b5e22e]" />
+                  <div>
+                    <p className="text-zinc-300 text-sm font-medium">Monday – Saturday</p>
+                    <p className="text-zinc-500 text-xs">6:00 AM – 10:00 PM</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock size={13} className="text-zinc-600" />
+                  <div>
+                    <p className="text-zinc-300 text-sm font-medium">Sunday</p>
+                    <p className="text-zinc-500 text-xs">9:00 AM – 6:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Col 3 — Contact */}
+            <div>
+              <h4 className="text-white font-bold uppercase text-xs tracking-widest mb-5">
+                Quick Contact
+              </h4>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Phone size={13} className="text-[#b5e22e]" />
+                  <a
+                    href="tel:+639679365597"
+                    className="text-zinc-400 text-sm hover:text-[#b5e22e] transition-colors"
+                  >
+                    +63 967 936 5597
+                  </a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Instagram size={13} className="text-[#b5e22e]" />
+                  <a
+                    href="https://www.instagram.com/multifit.gym/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-400 text-sm hover:text-[#b5e22e] transition-colors"
+                  >
+                    @multifit.gym
+                  </a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Facebook size={13} className="text-[#b5e22e]" />
+                  <a
+                    href="https://www.facebook.com/MultiFitGymPh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-400 text-sm hover:text-[#b5e22e] transition-colors"
+                  >
+                    Multifit Gym
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Bottom */}
+          <div className="border-t border-zinc-800/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-zinc-600 text-xs">
+              © {new Date().getFullYear()} Multifit Gym · Jokko Centeno. All rights reserved.
+            </p>
+            <div className="flex items-center gap-5 flex-wrap justify-center">
+              <Link
+                to="/privacy"
+                className="text-zinc-500 hover:text-[#b5e22e] text-xs transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <span className="text-zinc-800 text-xs">·</span>
+              <Link
+                to="/terms"
+                className="text-zinc-500 hover:text-[#b5e22e] text-xs transition-colors"
+              >
+                Terms &amp; Conditions
+              </Link>
+              <span className="text-zinc-800 text-xs px-3 py-1 border border-zinc-800 rounded-full">
+                Powered by Next.js &amp; Supabase
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
