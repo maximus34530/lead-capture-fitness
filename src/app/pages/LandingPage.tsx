@@ -397,7 +397,7 @@ export default function LandingPage() {
                 />
               </button>
               <p className="text-zinc-500 text-xs leading-relaxed">
-                No spam. Coach Jokko texts you directly on WhatsApp within 24 hrs.
+                Coach Jokko texts you directly on WhatsApp within 24 hrs.
               </p>
             </div>
 
