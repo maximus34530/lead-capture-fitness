@@ -361,7 +361,6 @@ export default function LandingPage() {
           <div className="max-w-3xl">
             {/* Eyebrow */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-px w-8 bg-[#b5e22e] shrink-0" />
               <span className="text-[#b5e22e] text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em]">
                 Multifit Gym · Dumaguete City, Philippines
               </span>
@@ -443,16 +442,16 @@ export default function LandingPage() {
                 <span className="text-white">Were Forged.</span>
               </h2>
               <p className="text-zinc-400 leading-relaxed mb-6">
-                Most online coaches sell you a PDF and a login. Jokko&apos;s programming is
-                developed, tested, and refined daily inside a real facility — Multifit Gym in
-                Dumaguete City. Every protocol you receive online has been proven on real athletes
-                in person first.
+                Most online coaches sell you a PDF and a login. Coach Jokko&apos;s programming is
+                developed, tested, and refined daily inside a real facility. Multifit Gym in
+                Dumaguete City. Every session you receive online has been proven and tested on real
+                athletes in person first.
               </p>
               <div className="space-y-3">
                 {[
-                  "Real rooftop gym floor — not a home-workout PDF shop",
+                  "Real rooftop gym floor, not a home-workout PDF shop",
                   "International credibility from a licensed hybrid performance facility",
-                  "Systems built for busy professionals — not weekend hobbyists",
+                  "Systems built for busy professionals, not weekend hobbyists",
                 ].map((point) => (
                   <div key={point} className="flex items-start gap-3">
                     <CheckCircle size={16} className="text-[#b5e22e] shrink-0 mt-0.5" />
@@ -511,7 +510,7 @@ export default function LandingPage() {
 
               {/* Floating stat */}
               <div className="absolute -top-4 -right-4 bg-[#b5e22e] text-black rounded-sm px-4 py-3 font-black">
-                <p className="text-2xl leading-none">4</p>
+                <p className="text-2xl leading-none">4+</p>
                 <p className="text-xs font-bold uppercase tracking-wide">Yrs Experience</p>
               </div>
             </Reveal>
@@ -543,7 +542,7 @@ export default function LandingPage() {
                 </div>
                 <p className="text-zinc-400 text-sm max-w-md">
                   A look inside the facility where every program is built, tested, and refined
-                  daily — Dumaguete City, Philippines.
+                  daily. Dumaguete City, Philippines.
                 </p>
               </div>
             </Reveal>
@@ -595,8 +594,8 @@ export default function LandingPage() {
                 When You Train <span className="text-[#b5e22e]">Under Jokko</span>
               </h2>
               <p className="text-zinc-400 mt-4 max-w-xl mx-auto leading-relaxed">
-                From the day you apply to the day you don&apos;t recognize the man (or woman) in
-                the mirror — this is the exact path Jokko walks every client down.
+                From the day you apply to the day you don&apos;t recognize yourself in the mirror,
+                this is the exact path Jokko walks every client down.
               </p>
             </div>
           </Reveal>
@@ -616,14 +615,14 @@ export default function LandingPage() {
                     bullets: [
                       "Personal WhatsApp message from Jokko within 12–24 hours",
                       "Full audit: lifestyle, training history, injuries, time, goals",
-                      "Honest fit assessment — he turns clients away when it isn't right",
+                      "Honest fit assessment",
                     ],
                   },
                   {
                     num: "02",
                     title: "The Blueprint",
                     description:
-                      "Jokko architects your custom 90-day training, nutrition, and recovery system engineered around your gym access, travel schedule, and the realities of your life. Not a template sold to a thousand people. Yours.",
+                      "Jokko architects your custom 90-day training, nutrition, and recovery system engineered around your gym access, travel schedule, and the realities of your life.",
                     bullets: [
                       "Personalized 90-day training arc with weekly progression",
                       "Nutrition framework built for your cuisine, country, and travel",
@@ -638,7 +637,7 @@ export default function LandingPage() {
                     bullets: [
                       "Daily WhatsApp / Voxer check-ins with Jokko himself",
                       "Video form analysis on every key lift",
-                      "Real-time programming adjustments — not week-late corrections",
+                      "Real-time programming adjustments",
                     ],
                   },
                   {
@@ -648,8 +647,8 @@ export default function LandingPage() {
                       "Every 30 days: a full 1-on-1 performance review. Strength numbers, body composition, sleep, energy, mood. We look at what's working, what isn't, and recalibrate the next block.",
                     bullets: [
                       "Monthly 1-on-1 performance dashboard",
-                      "Data-driven adjustments — no guessing, no vibes",
-                      "Recalibrated next 30 days based on what your body actually did",
+                      "Data-driven adjustments",
+                      "Recalibrated next 30 days based on your current performance",
                     ],
                   },
                   {
@@ -794,7 +793,7 @@ export default function LandingPage() {
               </div>
               <p className="text-zinc-300 text-sm leading-relaxed mb-5">
                 "Every January I&apos;d sign up, by February tapos na. Coach Jokko texts me every
-                morning — &lsquo;Bro, anong oras gym today?&rsquo; Yun lang. 7 months straight, 12
+                morning, &lsquo;Bro, anong oras gym today?&rsquo; Yun lang. 7 months straight, 12
                 kilos down."
               </p>
               <div className="border-t border-zinc-800 pt-4 flex items-center justify-between">
@@ -919,14 +918,14 @@ export default function LandingPage() {
                 <span className="text-white">Expert & Gym Owner</span>
               </h2>
               <p className="text-zinc-400 leading-relaxed mb-4">
-                Coach Jokko built Multifit Gym from the ground up in Dumaguete City — a fully
-                operational commercial training facility that serves elite local athletes and
-                expatriate professionals daily. His programming philosophy isn&apos;t drawn from
+                Coach Jokko built Multifit Gym from the ground up in the Philippines. Multifit is a
+                fully operational commercial training facility that serves elite local athletes and
+                international professionals daily. His programming philosophy isn&apos;t drawn from
                 certification textbooks. It&apos;s drawn from years of live coaching on a real gym
                 floor.
               </p>
               <p className="text-zinc-400 leading-relaxed mb-8">
-                His online coaching extends that same methodology globally — adapted for time zones,
+                His online coaching extends that same methodology globally, adapted for time zones,
                 travel schedules, and the realities of a demanding professional life. If you want
                 coaching built on real-world evidence, not algorithm-generated templates, this is
                 it.
@@ -1110,8 +1109,8 @@ export default function LandingPage() {
               Real Gym. Real Athletes. <span className="text-[#b5e22e]">Real Daily Proof.</span>
             </h3>
             <p className="text-zinc-400 text-sm max-w-md mx-auto mb-6">
-              Follow Multifit Gym on social to see live training sessions, athlete progress, and
-              behind-the-scenes from the floor — updated daily.
+              Follow Multifit Gym to see live training sessions, athlete progress, and
+              behind-the-scenes from the floor.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <a
@@ -1165,8 +1164,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="text-zinc-400 text-sm leading-relaxed mb-5 max-w-md">
-                Global remote coaching grounded in a real facility. Elite programming for
-                professionals, hybrid athletes, and competitors worldwide.
+                Remote elite coaching for professionals, hybrid athletes, and competitors worldwide.
               </p>
               <div className="flex items-start gap-2">
                 <MapPin size={14} className="text-[#b5e22e] mt-0.5 shrink-0" />
@@ -1263,9 +1261,6 @@ export default function LandingPage() {
               >
                 Terms &amp; Conditions
               </Link>
-              <span className="text-zinc-800 text-xs px-3 py-1 border border-zinc-800 rounded-full">
-                Powered by Next.js &amp; Supabase
-              </span>
             </div>
           </div>
         </div>
