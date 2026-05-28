@@ -612,7 +612,7 @@ export default function LandingPage() {
                     num: "01",
                     title: "The Intake",
                     description:
-                      "After your application, Jokko personally reviews your goals, lifestyle, training history, injuries, and time constraints. No assistants. No templates. The first conversation that shapes everything that follows.",
+                      "After your application, Jokko personally reviews your goals, lifestyle, training history, injuries, and time constraints. The first conversation that shapes everything that follows.",
                     bullets: [
                       "Personal WhatsApp message from Jokko within 12–24 hours",
                       "Full audit: lifestyle, training history, injuries, time, goals",
@@ -623,7 +623,7 @@ export default function LandingPage() {
                     num: "02",
                     title: "The Blueprint",
                     description:
-                      "Jokko architects your custom 90-day training, nutrition, and recovery system — engineered around your gym access, travel schedule, and the realities of your life. Not a template sold to a thousand people. Yours.",
+                      "Jokko architects your custom 90-day training, nutrition, and recovery system engineered around your gym access, travel schedule, and the realities of your life. Not a template sold to a thousand people. Yours.",
                     bullets: [
                       "Personalized 90-day training arc with weekly progression",
                       "Nutrition framework built for your cuisine, country, and travel",
@@ -947,63 +947,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SOCIAL — Verify the coach is real ── */}
-      <section className="py-16 border-t border-zinc-800/60 bg-zinc-950">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="bg-zinc-900/60 border border-zinc-800 rounded-sm p-8 text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-8 bg-[#b5e22e]" />
-              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
-                See The Daily Work
-              </span>
-              <div className="h-px w-8 bg-[#b5e22e]" />
-            </div>
-            <h3
-              className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-3"
-              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-            >
-              Real Gym. Real Athletes. <span className="text-[#b5e22e]">Real Daily Proof.</span>
-            </h3>
-            <p className="text-zinc-400 text-sm max-w-md mx-auto mb-6">
-              Follow Multifit Gym on social to see live training sessions, athlete progress, and
-              behind-the-scenes from the floor — updated daily.
-            </p>
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <a
-                href="https://www.instagram.com/multifit.gym/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Follow Multifit Gym on Instagram"
-                className="group flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] hover:bg-zinc-800/80 rounded-sm px-5 py-3 transition-all duration-200"
-              >
-                <Instagram size={18} className="text-[#b5e22e]" />
-                <span className="text-white text-sm font-bold uppercase tracking-wider">
-                  Instagram
-                </span>
-                <span className="text-zinc-500 text-xs group-hover:text-zinc-300 transition-colors">
-                  @multifit.gym
-                </span>
-              </a>
-              <a
-                href="https://www.facebook.com/MultiFitGymPh"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Follow Multifit Gym on Facebook"
-                className="group flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] hover:bg-zinc-800/80 rounded-sm px-5 py-3 transition-all duration-200"
-              >
-                <Facebook size={18} className="text-[#b5e22e]" />
-                <span className="text-white text-sm font-bold uppercase tracking-wider">
-                  Facebook
-                </span>
-                <span className="text-zinc-500 text-xs group-hover:text-zinc-300 transition-colors">
-                  Multifit Gym
-                </span>
-              </a>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
       {/* ── LEAD CAPTURE FORM ── */}
       <section ref={formRef} className="py-24 border-t border-zinc-800/60 bg-zinc-950">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1145,6 +1088,63 @@ export default function LandingPage() {
                 </button>
               </form>
             )}
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── SOCIAL — Verify the coach is real ── */}
+      <section className="py-16 border-t border-zinc-800/60 bg-zinc-950">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="bg-zinc-900/60 border border-zinc-800 rounded-sm p-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-8 bg-[#b5e22e]" />
+              <span className="text-[#b5e22e] text-xs font-bold uppercase tracking-[0.2em]">
+                See The Daily Work
+              </span>
+              <div className="h-px w-8 bg-[#b5e22e]" />
+            </div>
+            <h3
+              className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white mb-3"
+              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
+            >
+              Real Gym. Real Athletes. <span className="text-[#b5e22e]">Real Daily Proof.</span>
+            </h3>
+            <p className="text-zinc-400 text-sm max-w-md mx-auto mb-6">
+              Follow Multifit Gym on social to see live training sessions, athlete progress, and
+              behind-the-scenes from the floor — updated daily.
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <a
+                href="https://www.instagram.com/multifit.gym/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow Multifit Gym on Instagram"
+                className="group flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] hover:bg-zinc-800/80 rounded-sm px-5 py-3 transition-all duration-200"
+              >
+                <Instagram size={18} className="text-[#b5e22e]" />
+                <span className="text-white text-sm font-bold uppercase tracking-wider">
+                  Instagram
+                </span>
+                <span className="text-zinc-500 text-xs group-hover:text-zinc-300 transition-colors">
+                  @multifit.gym
+                </span>
+              </a>
+              <a
+                href="https://www.facebook.com/MultiFitGymPh"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow Multifit Gym on Facebook"
+                className="group flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 hover:border-[#b5e22e] hover:bg-zinc-800/80 rounded-sm px-5 py-3 transition-all duration-200"
+              >
+                <Facebook size={18} className="text-[#b5e22e]" />
+                <span className="text-white text-sm font-bold uppercase tracking-wider">
+                  Facebook
+                </span>
+                <span className="text-zinc-500 text-xs group-hover:text-zinc-300 transition-colors">
+                  Multifit Gym
+                </span>
+              </a>
+            </div>
           </Reveal>
         </div>
       </section>
